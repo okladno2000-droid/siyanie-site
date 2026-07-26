@@ -175,20 +175,15 @@
     color: var(--text-muted); cursor: pointer;
   }
 
-  .chat-app {
+    .chat-app {
     display: none;
     max-width: 900px; margin: 30px auto 0;
     background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
     overflow: hidden; height: 600px;
-    display: grid; grid-template-columns: 280px 1fr;
+    display: grid;          ← УДАЛИ ЭТУ СТРОКУ
+    grid-template-columns: 280px 1fr;   ← УДАЛИ ЭТУ СТРОКУ
   }
-  .chat-app.show { display: grid; }
-
-  .chat-sidebar {
-    background: var(--bg-alt); border-right: 1px solid var(--border);
-    display: flex; flex-direction: column; padding: 20px;
-  }
-  .chat-sidebar h3 {
+  .chat-app.show { display: grid; }     ← ЗАМЕНИ НА ЭТО:
     font-size: 14px; color: var(--text-muted); margin: 0 0 14px;
     text-transform: uppercase; letter-spacing: 0.08em;
   }
