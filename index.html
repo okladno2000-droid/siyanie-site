@@ -175,15 +175,22 @@
     color: var(--text-muted); cursor: pointer;
   }
 
-    .chat-app {
+  .chat-app {
     display: none;
     max-width: 900px; margin: 30px auto 0;
     background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
     overflow: hidden; height: 600px;
-    display: grid;          ← УДАЛИ ЭТУ СТРОКУ
-    grid-template-columns: 280px 1fr;   ← УДАЛИ ЭТУ СТРОКУ
   }
-  .chat-app.show { display: grid; }     ← ЗАМЕНИ НА ЭТО:
+  .chat-app.show {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+  }
+
+  .chat-sidebar {
+    background: var(--bg-alt); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 20px;
+  }
+  .chat-sidebar h3 {
     font-size: 14px; color: var(--text-muted); margin: 0 0 14px;
     text-transform: uppercase; letter-spacing: 0.08em;
   }
@@ -274,7 +281,7 @@
   @media (max-width: 860px) {
     .hero { grid-template-columns: 1fr; }
     .beacon-wrap { height: 220px; order: -1; }
-    .chat-app { grid-template-columns: 1fr; height: auto; }
+    .chat-app.show { grid-template-columns: 1fr; height: auto; }
     .chat-sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 300px; }
   }
 </style>
@@ -394,7 +401,6 @@
     </div>
   </div>
 
-  <!-- ===== ЧАТЫ ===== -->
   <div class="chat-app" id="chat-app">
     <div class="chat-sidebar">
       <h3>Диалоги</h3>
@@ -529,4 +535,112 @@
     }
   }
 
- 
+  function logout() {
+    currentToken = null; currentChatId = null; currentUserEmail = null;
+    localStorage.removeItem('siyanie_token');
+    $('auth-forms').style.display = 'block';
+    $('dashboard').classList.remove('show');
+    $('chat-app').classList.remove('show');
+    $('chat-list').innerHTML = '';
+    $('messages-area').innerHTML = '<div class="empty-chat">Выбери диалог слева, чтобы увидеть сообщения</div>';
+    $('chat-header').innerHTML = 'Выбери чат <span>— или начни новый диалог</span>';
+    $('chat-input-row').style.display = 'none';
+    document.querySelector('header nav').innerHTML = '<a class="cta" href="#auth">Войти</a>';
+  }
+  $('logout-btn').addEventListener('click', logout);
+
+  async function loadChats() {
+    try {
+      const chats = await apiCall('/chats', null, currentToken);
+      const list = $('chat-list');
+      list.innerHTML = '';
+      chats.forEach(chat => {
+        const div = document.createElement('div');
+        div.className = 'chat-item';
+        div.dataset.id = chat.chat_id;
+        div.innerHTML = '<div class="email">' + (chat.with_email || 'Неизвестно') + '</div>' +
+          '<div class="preview">' + (chat.last_message || 'Нет сообщений') + '</div>';
+        div.addEventListener('click', () => openChat(chat.chat_id, chat.with_email));
+        list.appendChild(div);
+      });
+    } catch (e) { console.error('loadChats', e); }
+  }
+
+  $('start-chat-btn').addEventListener('click', async () => {
+    const email = $('new-chat-email').value.trim();
+    if (!email) return;
+    try {
+      await apiCall('/chats/start', { email }, currentToken);
+      $('new-chat-email').value = '';
+      await loadChats();
+    } catch (e) { alert(e.message); }
+  });
+
+  async function openChat(chatId, withEmail) {
+    currentChatId = chatId;
+    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+    const active = document.querySelector('.chat-item[data-id="' + chatId + '"]');
+    if (active) active.classList.add('active');
+    $('chat-header').innerHTML = (withEmail || 'Чат') + ' <span>— активен</span>';
+    $('chat-input-row').style.display = 'flex';
+    await loadMessages();
+  }
+
+  async function loadMessages() {
+    if (!currentChatId) return;
+    try {
+      const msgs = await apiCall('/chats/' + currentChatId + '/messages', null, currentToken);
+      const area = $('messages-area');
+      area.innerHTML = '';
+      if (msgs.length === 0) {
+        area.innerHTML = '<div class="empty-chat">Напиши первое сообщение...</div>';
+        return;
+      }
+      msgs.forEach(m => {
+        const div = document.createElement('div');
+        const isMine = m.is_mine;
+        div.className = 'message ' + (isMine ? 'outgoing' : 'incoming');
+        const time = new Date(m.created_at).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        div.innerHTML = '<div class="sender">' + (isMine ? 'Ты' : m.sender_email) + '</div>' +
+          '<div>' + escapeHtml(m.text) + '</div>' +
+          '<div class="time">' + time + '</div>';
+        area.appendChild(div);
+      });
+      area.scrollTop = area.scrollHeight;
+    } catch (e) { console.error('loadMessages', e); }
+  }
+
+  $('send-btn').addEventListener('click', sendMessage);
+  $('msg-text').addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+
+  async function sendMessage() {
+    const input = $('msg-text');
+    const text = input.value.trim();
+    if (!text || !currentChatId) return;
+    try {
+      await apiCall('/chats/' + currentChatId + '/messages', { text }, currentToken);
+      input.value = '';
+      await loadMessages();
+      await loadChats();
+    } catch (e) { alert(e.message); }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  if (currentToken) enterApp();
+
+  const signals = ["сигнал активен", "backend на связи", "сервер отвечает", "ждём сообщений..."];
+  let sIdx = 0;
+  setInterval(() => {
+    sIdx = (sIdx + 1) % signals.length;
+    $('signal-text').textContent = signals[sIdx];
+  }, 2600);
+  $('signal-text').textContent = signals[0];
+</script>
+
+</body>
+</html>
