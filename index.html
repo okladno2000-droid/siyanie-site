@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Сияние — сообщения, которые всегда находят адресата</title>
+<title>Сияние — мессенджер, который создаётся с нуля</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -160,6 +160,7 @@
   .status-msg.ok { background: rgba(74,222,128,0.12); color: var(--success); border: 1px solid rgba(74,222,128,0.3); }
   .verify-box { border-top: 1px dashed var(--border); margin-top: 20px; padding-top: 20px; }
   .verify-box p { font-size: 13px; color: var(--text-muted); margin: 0 0 14px; }
+
   .dashboard { display: none; }
   .dashboard.show { display: block; }
   .dashboard .row {
@@ -174,6 +175,100 @@
     color: var(--text-muted); cursor: pointer;
   }
 
+  .chat-app {
+    display: none;
+    max-width: 900px; margin: 30px auto 0;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+    overflow: hidden; height: 600px;
+    display: grid; grid-template-columns: 280px 1fr;
+  }
+  .chat-app.show { display: grid; }
+
+  .chat-sidebar {
+    background: var(--bg-alt); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 20px;
+  }
+  .chat-sidebar h3 {
+    font-size: 14px; color: var(--text-muted); margin: 0 0 14px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .new-chat-row {
+    display: flex; gap: 8px; margin-bottom: 16px;
+  }
+  .new-chat-row input {
+    flex: 1; margin: 0; font-size: 13px; padding: 10px 12px;
+  }
+  .new-chat-row button {
+    padding: 10px 14px; border-radius: 10px; border: none;
+    background: linear-gradient(120deg, var(--violet), var(--cyan));
+    color: #07060c; font-weight: 700; font-size: 13px; cursor: pointer;
+  }
+  .chat-list { flex: 1; overflow-y: auto; }
+  .chat-item {
+    padding: 14px; border-radius: 12px; cursor: pointer;
+    border: 1px solid transparent; margin-bottom: 8px;
+    transition: 0.15s;
+  }
+  .chat-item:hover, .chat-item.active {
+    background: var(--input); border-color: var(--border);
+  }
+  .chat-item .email { font-weight: 700; font-size: 14px; color: var(--text); }
+  .chat-item .preview {
+    font-size: 12.5px; color: var(--text-muted); margin-top: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .chat-main {
+    display: flex; flex-direction: column;
+  }
+  .chat-header {
+    padding: 18px 24px; border-bottom: 1px solid var(--border);
+    font-weight: 700; font-size: 15px;
+  }
+  .chat-header span { color: var(--text-muted); font-weight: 400; font-size: 13px; }
+  .messages-area {
+    flex: 1; overflow-y: auto; padding: 20px 24px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .message {
+    max-width: 70%; padding: 12px 16px; border-radius: 16px;
+    font-size: 14px; line-height: 1.45;
+  }
+  .message.incoming {
+    background: var(--input); align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .message.outgoing {
+    background: linear-gradient(120deg, var(--violet), var(--cyan));
+    color: #07060c; align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .message .sender {
+    font-size: 11px; opacity: 0.7; margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .message .time {
+    font-size: 10px; opacity: 0.5; margin-top: 6px; text-align: right;
+  }
+
+  .chat-input-row {
+    display: flex; gap: 10px; padding: 16px 24px;
+    border-top: 1px solid var(--border); background: var(--bg-alt);
+  }
+  .chat-input-row input {
+    flex: 1; margin: 0;
+  }
+  .chat-input-row button {
+    padding: 12px 22px; border-radius: 10px; border: none;
+    background: linear-gradient(120deg, var(--violet), var(--cyan));
+    color: #07060c; font-weight: 700; cursor: pointer;
+  }
+
+  .empty-chat {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; color: var(--text-faint); font-size: 14px;
+  }
+
   footer {
     padding: 40px 6vw 60px; text-align: center; color: var(--text-faint); font-size: 13px;
     border-top: 1px solid var(--border);
@@ -184,6 +279,8 @@
   @media (max-width: 860px) {
     .hero { grid-template-columns: 1fr; }
     .beacon-wrap { height: 220px; order: -1; }
+    .chat-app { grid-template-columns: 1fr; height: auto; }
+    .chat-sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 300px; }
   }
 </style>
 </head>
@@ -206,14 +303,14 @@
   <div>
     <p class="eyebrow"><span class="dot"></span> backend на связи</p>
     <h1>Сообщения,<br>которые всегда<br><span class="accent">находят адресата.</span></h1>
-    <p class="lede">Сияние — мессенджер, который создаётся с нуля: свой сервер, своя база, и вся логика на виду. Ниже — уже рабочая часть: регистрация и вход.</p>
+    <p class="lede">Сияние — мессенджер, который создаётся с нуля: свой сервер, своя база, и вся логика на виду. Ниже — уже рабочая часть: регистрация, вход и чаты.</p>
     <div class="hero-ctas">
       <a class="btn-primary" href="#auth">Создать аккаунт</a>
-      <a class="btn-ghost" href="#about">Как это устроено</a>
+      <a class="btn-ghost" href="#about">Как это работает</a>
     </div>
     <div class="signal-ticker mono">
       <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-      <span id="signal-text">инициализация...</span>
+      <span id="signal-text">сигнал активен</span>
     </div>
   </div>
   <div class="beacon-wrap">
@@ -242,10 +339,10 @@
       <h3>Регистрация по email</h3>
       <p>Код подтверждения, хеширование пароля, токен доступа — работает прямо сейчас, ниже на этой странице.</p>
     </div>
-    <div class="feature-card">
-      <div class="num">002</div>
+    <div class="feature-card live">
+      <div class="num">● live</div>
       <h3>Чаты и сообщения</h3>
-      <p>Следующий шаг: таблицы сообщений и обмен между пользователями в реальном времени.</p>
+      <p>Реальные диалоги между пользователями: создание чатов, история сообщений, отправка в реальном времени.</p>
     </div>
     <div class="feature-card">
       <div class="num">003</div>
@@ -279,14 +376,14 @@
         <label>Почта</label>
         <input id="reg-email" type="email" placeholder="name@example.com" autocomplete="off">
         <label>Пароль</label>
-        <input id="reg-password" type="password" placeholder="минимум 6 символов" autocomplete="off">
+        <input id="reg-password" type="password" placeholder="Минимум 6 символов" autocomplete="off">
         <button class="submit-btn" id="register-btn">Зарегистрироваться</button>
 
         <div class="verify-box" id="verify-box" style="display:none;">
-          <p>Код отправлен на почту (пока — виден в логах сервера).</p>
-          <label>Код подтверждения</label>
+          <p>Введи код подтверждения, который пришёл на почту (или смотри в логах Railway).</p>
+          <label>Код</label>
           <input id="verify-code" type="text" maxlength="6" placeholder="123456">
-          <button class="submit-btn" id="verify-btn">Подтвердить и войти</button>
+          <button class="submit-btn" id="verify-btn">Подтвердить</button>
           <div class="status-msg" id="verify-status"></div>
         </div>
       </div>
@@ -296,8 +393,32 @@
         <label>Почта</label>
         <input id="login-email" type="email" placeholder="name@example.com" autocomplete="off">
         <label>Пароль</label>
-        <input id="login-password" type="password" placeholder="пароль" autocomplete="off">
+        <input id="login-password" type="password" placeholder="Пароль" autocomplete="off">
         <button class="submit-btn" id="login-btn">Войти</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ЧАТЫ ===== -->
+  <div class="chat-app" id="chat-app">
+    <div class="chat-sidebar">
+      <h3>Диалоги</h3>
+      <div class="new-chat-row">
+        <input id="new-chat-email" type="email" placeholder="Email собеседника">
+        <button id="start-chat-btn">+</button>
+      </div>
+      <div class="chat-list" id="chat-list"></div>
+    </div>
+    <div class="chat-main">
+      <div class="chat-header" id="chat-header">
+        Выбери чат <span>— или начни новый диалог</span>
+      </div>
+      <div class="messages-area" id="messages-area">
+        <div class="empty-chat">Выбери диалог слева, чтобы увидеть сообщения</div>
+      </div>
+      <div class="chat-input-row" id="chat-input-row" style="display:none;">
+        <input id="msg-text" type="text" placeholder="Напиши сообщение...">
+        <button id="send-btn">➤</button>
       </div>
     </div>
   </div>
@@ -315,27 +436,14 @@
 
 <script>
   const API_BASE = "https://calm-blessing-production-5141.up.railway.app";
-  let currentToken = null;
+  let currentToken = localStorage.getItem('siyanie_token') || null;
+  let currentChatId = null;
+  let currentUserEmail = null;
 
-  const signals = ["сигнал активен", "сервер на связи", "бэкенд отвечает", "ожидание запроса..."];
-  let sIdx = 0;
-  setInterval(() => {
-    sIdx = (sIdx + 1) % signals.length;
-    document.getElementById('signal-text').textContent = signals[sIdx];
-  }, 2600);
-  document.getElementById('signal-text').textContent = signals[0];
-
-  document.querySelectorAll('.auth-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById('view-' + tab.dataset.tab).classList.add('active');
-    });
-  });
+  const $ = id => document.getElementById(id);
 
   function showStatus(id, ok, text) {
-    const el = document.getElementById(id);
+    const el = $(id);
     el.className = 'status-msg show ' + (ok ? 'ok' : 'err');
     el.textContent = text;
   }
@@ -346,78 +454,84 @@
     const res = await fetch(API_BASE + path, {
       method: body ? 'POST' : 'GET',
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body ? JSON.stringify(body) : undefined
     });
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.detail || 'Что-то пошло не так');
+    if (!res.ok) throw new Error(data.detail || 'Ошибка соединения с сервером');
     return data;
   }
 
-  document.getElementById('register-btn').addEventListener('click', async () => {
-    const btn = document.getElementById('register-btn');
-    const email = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
-    if (!email || !password) { showStatus('register-status', false, 'Заполни почту и пароль'); return; }
+  document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.auth-view').forEach(v => v.classList.remove('active'));
+      tab.classList.add('active');
+      $('view-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  $('register-btn').addEventListener('click', async () => {
+    const btn = $('register-btn');
+    const email = $('reg-email').value.trim();
+    const password = $('reg-password').value;
+    if (!email || !password) { showStatus('register-status', false, 'Заполни все поля'); return; }
     btn.disabled = true;
     try {
       const data = await apiCall('/register', { email, password });
       showStatus('register-status', true, data.message);
-      document.getElementById('verify-box').style.display = 'block';
+      $('verify-box').style.display = 'block';
     } catch (e) {
       showStatus('register-status', false, e.message);
-    } finally {
-      btn.disabled = false;
-    }
+    } finally { btn.disabled = false; }
   });
 
-  document.getElementById('verify-btn').addEventListener('click', async () => {
-    const btn = document.getElementById('verify-btn');
-    const email = document.getElementById('reg-email').value.trim();
-    const code = document.getElementById('verify-code').value.trim();
+  $('verify-btn').addEventListener('click', async () => {
+    const btn = $('verify-btn');
+    const email = $('reg-email').value.trim();
+    const code = $('verify-code').value.trim();
     btn.disabled = true;
     try {
       const data = await apiCall('/verify', { email, code });
       currentToken = data.access_token;
+      localStorage.setItem('siyanie_token', currentToken);
       showStatus('verify-status', true, 'Почта подтверждена!');
-      await loadDashboard();
+      await enterApp();
     } catch (e) {
       showStatus('verify-status', false, e.message);
-    } finally {
-      btn.disabled = false;
-    }
+    } finally { btn.disabled = false; }
   });
 
-  document.getElementById('login-btn').addEventListener('click', async () => {
-    const btn = document.getElementById('login-btn');
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    if (!email || !password) { showStatus('login-status', false, 'Заполни почту и пароль'); return; }
+  $('login-btn').addEventListener('click', async () => {
+    const btn = $('login-btn');
+    const email = $('login-email').value.trim();
+    const password = $('login-password').value;
+    if (!email || !password) { showStatus('login-status', false, 'Заполни все поля'); return; }
     btn.disabled = true;
     try {
       const data = await apiCall('/login', { email, password });
       currentToken = data.access_token;
-      await loadDashboard();
+      localStorage.setItem('siyanie_token', currentToken);
+      await enterApp();
     } catch (e) {
       showStatus('login-status', false, e.message);
-    } finally {
-      btn.disabled = false;
-    }
+    } finally { btn.disabled = false; }
   });
 
-  async function loadDashboard() {
-    const me = await apiCall('/me', null, currentToken);
-    document.getElementById('db-email').textContent = me.email;
-    document.getElementById('db-status').textContent = me.is_verified ? 'подтверждён' : 'не подтверждён';
-    document.getElementById('auth-forms').style.display = 'none';
-    document.getElementById('dashboard').classList.add('show');
+  async function enterApp() {
+    try {
+      const me = await apiCall('/me', null, currentToken);
+      currentUserEmail = me.email;
+      $('auth-forms').style.display = 'none';
+      $('dashboard').classList.add('show');
+      $('db-email').textContent = me.email;
+      $('db-status').textContent = me.is_verified ? 'подтверждён' : 'не подтверждён';
+      $('chat-app').classList.add('show');
+      document.querySelector('header nav').innerHTML = '<a class="cta" href="#auth">' + me.email + '</a>';
+      await loadChats();
+    } catch (e) {
+      showStatus('login-status', false, 'Сессия устарела, войди заново');
+      logout();
+    }
   }
 
-  document.getElementById('logout-btn').addEventListener('click', () => {
-    currentToken = null;
-    document.getElementById('dashboard').classList.remove('show');
-    document.getElementById('auth-forms').style.display = 'block';
-  });
-</script>
-
-</body>
-</html>
+ 
