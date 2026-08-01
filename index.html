@@ -348,6 +348,15 @@
 
   const $ = id => document.getElementById(id);
 
+  function isAuthError(msg) {
+    if (!msg) return false;
+    const m = msg.toLowerCase();
+    return m.includes('401') || m.includes('403') || m.includes('404') || 
+           m.includes('не авторизован') || m.includes('not authenticated') || 
+           m.includes('unauthorized') || m.includes('invalid token') ||
+           m.includes('token expired');
+  }
+
   function showStatus(id, ok, text) {
     const el = $(id);
     if (!el) return;
@@ -542,24 +551,26 @@
   }
 
   async function openSettings() {
-    // Если currentUser нет — пробуем загрузить
+    // Если currentUser нет — пробуем загрузить, но не блокируем открытие
     if (!currentUser) {
       try {
         currentUser = await apiCall('/me');
         updateMenuButton();
       } catch (e) {
         console.error('Не удалось загрузить профиль:', e);
-        alert('Не удалось загрузить профиль. Проверьте интернет или обновите страницу.');
-        return;
+        if (isAuthError(e.message)) {
+          logout(); return;
+        }
+        // Не блокируем — откроем с пустыми полями
       }
     }
     
-    $('settingsName').value = currentUser.display_name || currentUser.name || '';
-    $('settingsUsername').value = currentUser.username || '';
-    $('settingsBio').value = currentUser.bio || '';
-    $('settingsAvatarUrl').value = currentUser.avatar_url || '';
-    tempAvatarUrl = currentUser.avatar_url || '';
-    tempAvatarColor = currentUser.avatar_color || PRESET_COLORS[0];
+    $('settingsName').value = currentUser ? (currentUser.display_name || currentUser.name || '') : '';
+    $('settingsUsername').value = currentUser ? (currentUser.username || '') : '';
+    $('settingsBio').value = currentUser ? (currentUser.bio || '') : '';
+    $('settingsAvatarUrl').value = currentUser ? (currentUser.avatar_url || '') : '';
+    tempAvatarUrl = currentUser ? (currentUser.avatar_url || '') : '';
+    tempAvatarColor = currentUser ? (currentUser.avatar_color || PRESET_COLORS[0]) : PRESET_COLORS[0];
     
     $('nameCount').textContent = ($('settingsName').value.length) + ' / 64';
     $('usernameCount').textContent = ($('settingsUsername').value.length) + ' / 32';
@@ -602,7 +613,12 @@
       }
       setTimeout(closeSettings, 800);
     } catch (e) {
-      showStatus('settings-status', false, e.message || 'Не удалось сохранить');
+      if (isAuthError(e.message)) {
+        showStatus('settings-status', false, 'Сессия истекла. Перезайдите.');
+        setTimeout(logout, 1500);
+      } else {
+        showStatus('settings-status', false, e.message || 'Не удалось сохранить');
+      }
     }
     $('saveSettings').disabled = false;
   }
@@ -633,7 +649,7 @@
       updateMenuButton();
     } catch (e) {
       console.error('/me error:', e);
-      if (e.message.includes('401') || e.message.includes('403') || e.message.includes('404') || e.message.includes('не авторизован')) {
+      if (isAuthError(e.message)) {
         logout(); return;
       }
     }
