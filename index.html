@@ -20,6 +20,7 @@
     --danger: #ff6b81;
     --success: #4ade80;
     --input-bg: #2b2b2b;
+    --modal-bg: rgba(0,0,0,0.7);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; -webkit-tap-highlight-color: transparent; }
@@ -34,11 +35,15 @@
   .auth-view { display: none; }
   .auth-view.active { display: block; }
   label { display: block; font-size: 12.5px; color: var(--text-muted); margin: 0 0 6px; }
-  input[type="email"], input[type="password"], input[type="text"] { width: 100%; font-family: inherit; font-size: 15px; color: var(--text); background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; outline: none; margin-bottom: 14px; transition: border-color 0.2s; }
-  input:focus { border-color: var(--accent); }
+  input[type="email"], input[type="password"], input[type="text"], textarea {
+    width: 100%; font-family: inherit; font-size: 15px; color: var(--text); background: var(--input-bg); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; outline: none; margin-bottom: 14px; transition: border-color 0.2s; resize: none;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
   .submit-btn { width: 100%; font-family: inherit; font-size: 15px; font-weight: 700; padding: 13px; border-radius: 10px; border: none; cursor: pointer; background: linear-gradient(120deg, var(--accent), #4fd8ff); color: #07060c; transition: opacity 0.2s, transform 0.1s; }
   .submit-btn:active { transform: scale(0.98); }
   .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .submit-btn.secondary { background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }
+  .submit-btn.danger { background: rgba(255,107,129,0.15); color: var(--danger); border: 1px solid rgba(255,107,129,0.3); }
   .status-msg { font-size: 13.5px; padding: 10px 12px; border-radius: 8px; margin: -4px 0 14px; display: none; }
   .status-msg.show { display: block; }
   .status-msg.err { background: rgba(255,107,129,0.12); color: var(--danger); border: 1px solid rgba(255,107,129,0.3); }
@@ -55,15 +60,17 @@
   .sidebar-header { padding: 10px 14px; background: var(--sidebar); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
   .sidebar-search { flex: 1; background: var(--input-bg); border: none; border-radius: 20px; padding: 9px 16px; color: var(--text); font-size: 14px; outline: none; font-family: inherit; }
   .sidebar-search::placeholder { color: var(--text-secondary); }
-  .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; overflow: hidden; }
   .icon-btn:hover { background: var(--sidebar-hover); color: var(--text); }
   .icon-btn:active { transform: scale(0.92); }
+  .icon-btn img { width: 100%; height: 100%; object-fit: cover; }
   .new-chat-row { display: flex; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); animation: slideDown 0.2s ease; }
   @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
   .chat-list { flex: 1; overflow-y: auto; }
   .chat-item { display: flex; align-items: center; padding: 10px 16px; cursor: pointer; gap: 12px; transition: background 0.15s; position: relative; }
   .chat-item:hover, .chat-item.active { background: var(--sidebar-hover); }
-  .chat-avatar { width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), #4fd8ff); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; }
+  .chat-avatar { width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0; background: linear-gradient(135deg, var(--accent), #4fd8ff); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; overflow: hidden; }
+  .chat-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .chat-info { flex: 1; min-width: 0; }
   .chat-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
   .chat-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -77,7 +84,8 @@
   /* Chat Area */
   .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg); transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
   .chat-header { padding: 10px 20px; background: var(--sidebar); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
-  .chat-header-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #4fd8ff); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .chat-header-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #4fd8ff); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
+  .chat-header-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .chat-header-info { flex: 1; min-width: 0; }
   .chat-header-name { font-weight: 600; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chat-header-status { font-size: 13px; color: var(--accent-light); }
@@ -123,12 +131,38 @@
   .empty-chat-icon { font-size: 72px; margin-bottom: 16px; opacity: 0.2; filter: grayscale(1); }
   .empty-chat-text { font-size: 15px; }
 
-  .typing-indicator { font-size: 13px; color: var(--accent-light); padding: 4px 20px; height: 22px; }
-
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+  /* SETTINGS MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: var(--modal-bg); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px; animation: fadeIn 0.2s ease; }
+  .modal-overlay.show { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal { width: 100%; max-width: 420px; background: var(--sidebar); border: 1px solid var(--border); border-radius: 16px; padding: 24px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1); }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .modal-title { font-size: 20px; font-weight: 700; }
+  .modal-close { width: 36px; height: 36px; border-radius: 50%; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; }
+  .modal-close:hover { background: var(--sidebar-hover); color: var(--text); }
+  .avatar-section { text-align: center; margin-bottom: 20px; }
+  .avatar-big { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 12px; background: linear-gradient(135deg, var(--accent), #4fd8ff); display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: #fff; cursor: pointer; position: relative; overflow: hidden; transition: transform 0.2s; }
+  .avatar-big:hover { transform: scale(1.05); }
+  .avatar-big img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-big .avatar-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; font-size: 14px; }
+  .avatar-big:hover .avatar-overlay { opacity: 1; }
+  .avatar-hint { font-size: 12px; color: var(--text-secondary); }
+  .avatar-presets { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+  .preset-color { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.15s; }
+  .preset-color:hover { transform: scale(1.15); }
+  .preset-color.active { border-color: #fff; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { margin-bottom: 6px; }
+  .form-group input, .form-group textarea { margin-bottom: 0; }
+  .char-count { text-align: right; font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+  .modal-actions .submit-btn { flex: 1; }
 
   /* Tablet */
   @media (max-width: 960px) {
@@ -142,32 +176,15 @@
   /* Mobile */
   @media (max-width: 600px) {
     .app-layout { overflow: hidden; }
-    .sidebar { 
-      width: 100%; 
-      min-width: 100%; 
-      position: absolute; 
-      left: 0; 
-      top: 0; 
-      height: 100%; 
-      z-index: 10;
-      border-right: none;
-    }
-    .chat-area { 
-      position: absolute; 
-      left: 0; 
-      top: 0; 
-      width: 100%; 
-      height: 100%; 
-      z-index: 20;
-      transform: translateX(100%);
-      background: var(--bg);
-    }
+    .sidebar { width: 100%; min-width: 100%; position: absolute; left: 0; top: 0; height: 100%; z-index: 10; border-right: none; }
+    .chat-area { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 20; transform: translateX(100%); background: var(--bg); }
     .chat-area.chat-open-mobile { transform: translateX(0); }
     .back-btn { display: flex !important; }
     .messages, .input-area { padding: 10px; }
     .chat-header { padding: 10px 12px; }
     .sidebar-header { padding: 10px 12px; }
     .auth-box { padding: 24px 20px; border-radius: 12px; }
+    .modal { padding: 20px 16px; }
   }
 </style>
 </head>
@@ -218,7 +235,9 @@
   <div class="app-layout">
     <div class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <button class="icon-btn" id="menuBtn" title="Меню">☰</button>
+        <button class="icon-btn" id="menuBtn" title="Мой профиль">
+          <span id="menuBtnText">☰</span>
+        </button>
         <input type="text" class="sidebar-search" id="searchInput" placeholder="Поиск по чатам">
         <button class="icon-btn" id="newChatToggle" title="Новый чат">+</button>
         <button class="icon-btn" id="logoutBtn" title="Выйти">🚪</button>
@@ -259,6 +278,49 @@
   </div>
 </div>
 
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Настройки профиля</div>
+      <button class="modal-close" id="closeSettings">×</button>
+    </div>
+    <div class="avatar-section">
+      <div class="avatar-big" id="settingsAvatar">
+        <span id="settingsAvatarText">?</span>
+        <img id="settingsAvatarImg" style="display:none;">
+        <div class="avatar-overlay">Изменить</div>
+      </div>
+      <div class="avatar-hint">Нажмите на аватар, чтобы вставить ссылку</div>
+      <div class="avatar-presets" id="avatarPresets"></div>
+    </div>
+    <div class="form-group">
+      <label>Имя</label>
+      <input type="text" id="settingsName" maxlength="64" placeholder="Ваше имя">
+      <div class="char-count" id="nameCount">0 / 64</div>
+    </div>
+    <div class="form-group">
+      <label>Ник (username)</label>
+      <input type="text" id="settingsUsername" maxlength="32" placeholder="username">
+      <div class="char-count" id="usernameCount">0 / 32</div>
+    </div>
+    <div class="form-group">
+      <label>О себе</label>
+      <textarea id="settingsBio" maxlength="140" rows="3" placeholder="Расскажите о себе..."></textarea>
+      <div class="char-count" id="bioCount">0 / 140</div>
+    </div>
+    <div class="form-group">
+      <label>Ссылка на аватар (URL)</label>
+      <input type="text" id="settingsAvatarUrl" placeholder="https://example.com/avatar.jpg">
+    </div>
+    <div class="modal-actions">
+      <button class="submit-btn secondary" id="cancelSettings">Отмена</button>
+      <button class="submit-btn" id="saveSettings">Сохранить</button>
+    </div>
+    <div class="status-msg" id="settings-status" style="margin-top:12px;margin-bottom:0;"></div>
+  </div>
+</div>
+
 <script>
   const API_BASE = "https://calm-blessing-production-5141.up.railway.app";
   let currentToken = localStorage.getItem('siyanie_token') || null;
@@ -269,6 +331,19 @@
   let chatListPollInterval = null;
   let lastMessageSignatures = new Map();
   let isUserAtBottom = true;
+  let tempAvatarUrl = '';
+  let tempAvatarColor = '';
+
+  const PRESET_COLORS = [
+    'linear-gradient(135deg, #8774e1, #4fd8ff)',
+    'linear-gradient(135deg, #ff6b81, #ff8e53)',
+    'linear-gradient(135deg, #4ade80, #22c55e)',
+    'linear-gradient(135deg, #fbbf24, #f59e0b)',
+    'linear-gradient(135deg, #a78bfa, #8b5cf6)',
+    'linear-gradient(135deg, #2dd4bf, #14b8a6)',
+    'linear-gradient(135deg, #f472b6, #ec4899)',
+    'linear-gradient(135deg, #60a5fa, #3b82f6)',
+  ];
 
   const $ = id => document.getElementById(id);
 
@@ -279,8 +354,8 @@
     el.textContent = text;
   }
 
-  async function apiCall(path, body, token) {
-    const opts = { method: body ? 'POST' : 'GET', headers: {} };
+  async function apiCall(path, body, token, method) {
+    const opts = { method: method || (body ? 'POST' : 'GET'), headers: {} };
     if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
     if (token || currentToken) opts.headers['Authorization'] = 'Bearer ' + (token || currentToken);
     const res = await fetch(API_BASE + path, opts);
@@ -326,6 +401,18 @@
     return clean.split(/[\s._-]+/).filter(Boolean).map(w => w[0].toUpperCase()).slice(0,2).join('');
   }
 
+  function getAvatarHtml(obj, sizeClass) {
+    const url = safe(obj, 'avatar_url', '') || safe(obj, 'participant.avatar_url', '');
+    const name = getDisplayName(obj);
+    const initials = getInitials(name);
+    const color = safe(obj, 'avatar_color', '') || safe(obj, 'participant.avatar_color', '');
+    const style = color ? 'style="background:' + color + '"' : '';
+    if (url) {
+      return '<div class="' + sizeClass + '" ' + style + '><img src="' + url + '" alt="" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + initials + '\'"></div>';
+    }
+    return '<div class="' + sizeClass + '" ' + style + '>' + initials + '</div>';
+  }
+
   function formatTime(iso) {
     if (!iso) return '';
     const d = new Date(iso);
@@ -353,9 +440,10 @@
 
   function linkify(text) {
     const urlRegex = /(https?:\/\/[^\s<]+[^\s<.,!?;:'"])/g;
-    return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+    return text.replace(urlRegex, url => '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>');
   }
 
+  // ===== AUTH =====
   async function register() {
     const display_name = $('reg-name').value.trim();
     const username = $('reg-username').value.trim().replace(/^@/, '');
@@ -404,6 +492,7 @@
   }
 
   async function logout() {
+    if (!confirm('Выйти из аккаунта?')) return;
     localStorage.removeItem('siyanie_token');
     currentToken = null; currentUser = null; currentChatId = null;
     if (pollInterval) clearInterval(pollInterval);
@@ -414,12 +503,120 @@
     $('chatArea').classList.remove('chat-open-mobile');
   }
 
+  // ===== SETTINGS =====
+  function renderAvatarPresets() {
+    const box = $('avatarPresets');
+    box.innerHTML = PRESET_COLORS.map((c, i) => 
+      '<div class="preset-color ' + (tempAvatarColor === c ? 'active' : '') + '" style="background:' + c + '" data-index="' + i + '" data-color="' + c + '"></div>'
+    ).join('');
+    box.querySelectorAll('.preset-color').forEach(el => {
+      el.onclick = () => {
+        tempAvatarColor = el.dataset.color;
+        tempAvatarUrl = '';
+        $('settingsAvatarUrl').value = '';
+        updateSettingsAvatarPreview();
+        renderAvatarPresets();
+      };
+    });
+  }
+
+  function updateSettingsAvatarPreview() {
+    const name = $('settingsName').value || '?';
+    const initials = getInitials(name);
+    const img = $('settingsAvatarImg');
+    const text = $('settingsAvatarText');
+    const big = $('settingsAvatar');
+    
+    if (tempAvatarUrl) {
+      img.src = tempAvatarUrl;
+      img.style.display = 'block';
+      text.style.display = 'none';
+      big.style.background = '';
+    } else {
+      img.style.display = 'none';
+      text.style.display = 'block';
+      text.textContent = initials;
+      big.style.background = tempAvatarColor || PRESET_COLORS[0];
+    }
+  }
+
+  function openSettings() {
+    if (!currentUser) return;
+    $('settingsName').value = currentUser.display_name || currentUser.name || '';
+    $('settingsUsername').value = currentUser.username || '';
+    $('settingsBio').value = currentUser.bio || '';
+    $('settingsAvatarUrl').value = currentUser.avatar_url || '';
+    tempAvatarUrl = currentUser.avatar_url || '';
+    tempAvatarColor = currentUser.avatar_color || PRESET_COLORS[0];
+    
+    $('nameCount').textContent = ($('settingsName').value.length) + ' / 64';
+    $('usernameCount').textContent = ($('settingsUsername').value.length) + ' / 32';
+    $('bioCount').textContent = ($('settingsBio').value.length) + ' / 140';
+    
+    renderAvatarPresets();
+    updateSettingsAvatarPreview();
+    $('settingsModal').classList.add('show');
+    showStatus('settings-status', true, '');
+    $('settings-status').className = 'status-msg';
+  }
+
+  function closeSettings() {
+    $('settingsModal').classList.remove('show');
+  }
+
+  async function saveProfile() {
+    const display_name = $('settingsName').value.trim();
+    const username = $('settingsUsername').value.trim().replace(/^@/, '');
+    const bio = $('settingsBio').value.trim();
+    const avatar_url = $('settingsAvatarUrl').value.trim();
+    const avatar_color = tempAvatarColor;
+    
+    if (!display_name) { showStatus('settings-status', false, 'Введите имя'); return; }
+    if (!username) { showStatus('settings-status', false, 'Введите ник'); return; }
+    
+    $('saveSettings').disabled = true;
+    try {
+      const body = { display_name, username, bio, avatar_url, avatar_color };
+      const data = await apiCall('/me', body, null, 'PATCH');
+      currentUser = { ...currentUser, ...body };
+      showStatus('settings-status', true, 'Профиль обновлён!');
+      updateMenuButton();
+      renderChatList($('searchInput').value);
+      if (currentChatId) {
+        const chat = chatsCache.find(c => c.id === currentChatId);
+        if (chat) {
+          $('headerName').textContent = getDisplayName(chat);
+          $('headerAvatar').innerHTML = getAvatarHtml(chat, '').replace('class=""', 'class="chat-header-avatar"');
+        }
+      }
+      setTimeout(closeSettings, 800);
+    } catch (e) {
+      showStatus('settings-status', false, e.message || 'Не удалось сохранить');
+    }
+    $('saveSettings').disabled = false;
+  }
+
+  function updateMenuButton() {
+    if (!currentUser) return;
+    const btn = $('menuBtn');
+    const url = currentUser.avatar_url;
+    if (url) {
+      btn.innerHTML = '<img src="' + url + '" alt="" onerror="this.innerHTML=\'<span>☰</span>\'">';
+    } else {
+      const initials = getInitials(currentUser.display_name || currentUser.name || '?');
+      const color = currentUser.avatar_color || PRESET_COLORS[0];
+      btn.innerHTML = '<span style="font-size:14px;font-weight:700;background:' + color + ';width:100%;height:100%;display:flex;align-items:center;justify-content:center;border-radius:50%;">' + initials + '</span>';
+    }
+  }
+
+  // ===== APP =====
   async function enterApp() {
     $('auth-screen').style.display = 'none';
     $('app-screen').style.display = 'block';
     try {
       const me = await apiCall('/me');
       currentUser = me;
+      updateMenuButton();
     } catch (e) {
       console.error('/me error:', e);
       if (e.message.includes('401') || e.message.includes('403') || e.message.includes('404') || e.message.includes('не авторизован')) {
@@ -460,23 +657,9 @@
       const lastMsg = chat.last_message || {};
       const isOwn = lastMsg.sender_email === safe(currentUser, 'email', '');
       const name = escapeHtml(getDisplayName(chat));
-      const initials = getInitials(name);
       const activeClass = chat.id === currentChatId ? 'active' : '';
-      return `
-        <div class="chat-item ${activeClass}" data-chat-id="${chat.id}">
-          <div class="chat-avatar">${initials}</div>
-          <div class="chat-info">
-            <div class="chat-top">
-              <div class="chat-name">${name}</div>
-              <div class="chat-time">${lastMsg.created_at ? formatTime(lastMsg.created_at) : ''}</div>
-            </div>
-            <div class="chat-bottom">
-              <div class="chat-preview">${lastMsg.text ? (isOwn ? 'Вы: ' : '') + escapeHtml(lastMsg.text) : 'Нет сообщений'}</div>
-              ${chat.unread_count ? `<div class="chat-badge">${chat.unread_count}</div>` : ''}
-            </div>
-          </div>
-        </div>
-      `;
+      const avatarHtml = getAvatarHtml(chat, 'chat-avatar');
+      return '<div class="chat-item ' + activeClass + '" data-chat-id="' + chat.id + '">' + avatarHtml + '<div class="chat-info"><div class="chat-top"><div class="chat-name">' + name + '</div><div class="chat-time">' + (lastMsg.created_at ? formatTime(lastMsg.created_at) : '') + '</div></div><div class="chat-bottom"><div class="chat-preview">' + (lastMsg.text ? (isOwn ? 'Вы: ' : '') + escapeHtml(lastMsg.text) : 'Нет сообщений') + '</div>' + (chat.unread_count ? '<div class="chat-badge">' + chat.unread_count + '</div>' : '') + '</div></div></div>';
     }).join('');
 
     if (list.innerHTML !== newHtml) {
@@ -498,7 +681,7 @@
     const name = getDisplayName(chat);
     const username = getUsername(chat);
     $('headerName').textContent = name;
-    $('headerAvatar').textContent = getInitials(name);
+    $('headerAvatar').innerHTML = getAvatarHtml(chat, '').replace('class=""', 'class="chat-header-avatar"');
     $('headerStatus').textContent = username || 'онлайн';
 
     if (window.innerWidth <= 600) {
@@ -540,7 +723,7 @@
       if (msgDate && msgDate !== lastDate) {
         const divider = document.createElement('div');
         divider.className = 'date-divider';
-        divider.innerHTML = `<span>${formatDateDivider(msg.created_at)}</span>`;
+        divider.innerHTML = '<span>' + formatDateDivider(msg.created_at) + '</span>';
         area.appendChild(divider);
         lastDate = msgDate;
         lastOwn = null; group = null;
@@ -555,9 +738,9 @@
       const bubble = document.createElement('div');
       bubble.className = 'message-bubble';
       const time = msg.created_at ? formatTime(msg.created_at) : '';
-      const checks = isOwn ? `<span class="checkmarks">${msg.read ? '✓✓' : '✓'}</span>` : '';
+      const checks = isOwn ? '<span class="checkmarks">' + (msg.read ? '✓✓' : '✓') + '</span>' : '';
       const textWithLinks = linkify(escapeHtml(msg.text));
-      bubble.innerHTML = `${textWithLinks}<div class="message-meta">${time} ${checks}</div>`;
+      bubble.innerHTML = textWithLinks + '<div class="message-meta">' + time + ' ' + checks + '</div>';
       group.appendChild(bubble);
     });
 
@@ -628,6 +811,7 @@
     }, 5000);
   }
 
+  // ===== EVENTS =====
   document.querySelectorAll('.auth-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
@@ -643,6 +827,37 @@
   $('login-btn').onclick = login;
   $('logoutBtn').onclick = logout;
   $('sendBtn').onclick = sendMessage;
+  $('menuBtn').onclick = openSettings;
+  $('closeSettings').onclick = closeSettings;
+  $('cancelSettings').onclick = closeSettings;
+  $('saveSettings').onclick = saveProfile;
+
+  $('settingsAvatar').onclick = () => {
+    const url = prompt('Вставьте ссылку на аватар (URL):', tempAvatarUrl || '');
+    if (url !== null) {
+      tempAvatarUrl = url.trim();
+      $('settingsAvatarUrl').value = tempAvatarUrl;
+      updateSettingsAvatarPreview();
+      renderAvatarPresets();
+    }
+  };
+
+  $('settingsName').addEventListener('input', function() {
+    $('nameCount').textContent = this.value.length + ' / 64';
+    updateSettingsAvatarPreview();
+  });
+  $('settingsUsername').addEventListener('input', function() {
+    $('usernameCount').textContent = this.value.length + ' / 32';
+  });
+  $('settingsBio').addEventListener('input', function() {
+    $('bioCount').textContent = this.value.length + ' / 140';
+  });
+  $('settingsAvatarUrl').addEventListener('input', function() {
+    tempAvatarUrl = this.value.trim();
+    updateSettingsAvatarPreview();
+    renderAvatarPresets();
+  });
+
   $('backBtn').onclick = () => {
     $('chatArea').classList.remove('chat-open-mobile');
     currentChatId = null;
@@ -650,12 +865,7 @@
     if (pollInterval) clearInterval(pollInterval);
     $('chatHeader').style.display = 'none';
     $('inputArea').style.display = 'none';
-    $('messagesArea').innerHTML = `
-      <div class="empty-chat">
-        <div class="empty-chat-icon">💬</div>
-        <div class="empty-chat-text">Выберите чат, чтобы начать общение</div>
-      </div>
-    `;
+    $('messagesArea').innerHTML = '<div class="empty-chat"><div class="empty-chat-icon">💬</div><div class="empty-chat-text">Выберите чат, чтобы начать общение</div></div>';
   };
 
   $('newChatToggle').onclick = () => {
@@ -687,6 +897,11 @@
     }
   });
 
+  $('settingsModal').addEventListener('click', e => {
+    if (e.target === $('settingsModal')) closeSettings();
+  });
+
+  // ===== INIT =====
   if (currentToken) {
     enterApp();
   } else {
