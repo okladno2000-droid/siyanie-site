@@ -60,10 +60,11 @@
   .sidebar-header { padding: 10px 14px; background: var(--sidebar); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
   .sidebar-search { flex: 1; background: var(--input-bg); border: none; border-radius: 20px; padding: 9px 16px; color: var(--text); font-size: 14px; outline: none; font-family: inherit; }
   .sidebar-search::placeholder { color: var(--text-secondary); }
-  .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; overflow: hidden; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; overflow: hidden; position: relative; }
   .icon-btn:hover { background: var(--sidebar-hover); color: var(--text); }
   .icon-btn:active { transform: scale(0.92); }
-  .icon-btn img { width: 100%; height: 100%; object-fit: cover; }
+  .icon-btn img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+  .icon-btn .btn-initials { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 14px; font-weight: 700; }
   .new-chat-row { display: flex; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); animation: slideDown 0.2s ease; }
   @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
   .chat-list { flex: 1; overflow-y: auto; }
@@ -236,7 +237,7 @@
     <div class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <button class="icon-btn" id="menuBtn" title="Мой профиль">
-          <span id="menuBtnText">☰</span>
+          <span class="btn-initials" id="menuBtnInitials" style="background:linear-gradient(135deg, #8774e1, #4fd8ff);">☰</span>
         </button>
         <input type="text" class="sidebar-search" id="searchInput" placeholder="Поиск по чатам">
         <button class="icon-btn" id="newChatToggle" title="Новый чат">+</button>
@@ -406,11 +407,11 @@
     const name = getDisplayName(obj);
     const initials = getInitials(name);
     const color = safe(obj, 'avatar_color', '') || safe(obj, 'participant.avatar_color', '');
-    const style = color ? 'style="background:' + color + '"' : '';
+    const bg = color || 'linear-gradient(135deg, #8774e1, #4fd8ff)';
     if (url) {
-      return '<div class="' + sizeClass + '" ' + style + '><img src="' + url + '" alt="" onerror="this.style.display=\'none\';this.parentElement.textContent=\'' + initials + '\'"></div>';
+      return '<div class="' + sizeClass + '" style="background:' + bg + '"><img src="' + url + '" alt="" onerror="this.style.display=\'none\';this.parentElement.querySelector(\'.av-text\').style.display=\'flex\'"><span class="av-text" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-weight:700;">' + initials + '</span></div>';
     }
-    return '<div class="' + sizeClass + '" ' + style + '>' + initials + '</div>';
+    return '<div class="' + sizeClass + '" style="background:' + bg + '">' + initials + '</div>';
   }
 
   function formatTime(iso) {
@@ -540,8 +541,19 @@
     }
   }
 
-  function openSettings() {
-    if (!currentUser) return;
+  async function openSettings() {
+    // Если currentUser нет — пробуем загрузить
+    if (!currentUser) {
+      try {
+        currentUser = await apiCall('/me');
+        updateMenuButton();
+      } catch (e) {
+        console.error('Не удалось загрузить профиль:', e);
+        alert('Не удалось загрузить профиль. Проверьте интернет или обновите страницу.');
+        return;
+      }
+    }
+    
     $('settingsName').value = currentUser.display_name || currentUser.name || '';
     $('settingsUsername').value = currentUser.username || '';
     $('settingsBio').value = currentUser.bio || '';
@@ -556,7 +568,6 @@
     renderAvatarPresets();
     updateSettingsAvatarPreview();
     $('settingsModal').classList.add('show');
-    showStatus('settings-status', true, '');
     $('settings-status').className = 'status-msg';
   }
 
@@ -598,14 +609,17 @@
 
   function updateMenuButton() {
     if (!currentUser) return;
-    const btn = $('menuBtn');
+    const initialsEl = $('menuBtnInitials');
     const url = currentUser.avatar_url;
+    const initials = getInitials(currentUser.display_name || currentUser.name || '?');
+    const color = currentUser.avatar_color || PRESET_COLORS[0];
+    
     if (url) {
-      btn.innerHTML = '<img src="' + url + '" alt="" onerror="this.innerHTML=\'<span>☰</span>\'">';
+      initialsEl.innerHTML = '<img src="' + url + '" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\'">' +
+        '<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:' + color + '">' + initials + '</span>';
     } else {
-      const initials = getInitials(currentUser.display_name || currentUser.name || '?');
-      const color = currentUser.avatar_color || PRESET_COLORS[0];
-      btn.innerHTML = '<span style="font-size:14px;font-weight:700;background:' + color + ';width:100%;height:100%;display:flex;align-items:center;justify-content:center;border-radius:50%;">' + initials + '</span>';
+      initialsEl.innerHTML = initials;
+      initialsEl.style.background = color;
     }
   }
 
